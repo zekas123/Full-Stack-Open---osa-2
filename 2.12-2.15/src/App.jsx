@@ -15,10 +15,11 @@ const App = () => {
     if (window.confirm(`Delete ${person.name}?`)) {
       axios.delete(`http://localhost:3001/persons/${id}`)
         .then(() => {
-          setPersons(persons.filter(p => p.id !== id))
+          setPersons(prev => prev.filter(p => p.id !== id))
         })
         .catch(error => {
           console.error('Error deleting person:', error)
+          alert('Failed to delete person')
         })
     }
   }
@@ -26,11 +27,40 @@ const App = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    addPerson(event)
+    
+    if (isNameInList) {
+      const existingPerson = persons.find(p => p.name === newName)
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        axios.put(`http://localhost:3001/persons/${existingPerson.id}`, {
+          name: newName,
+          number: newNumber,
+        })
+        .then(response => {
+          setPersons(prev => prev.map(p => p.id === existingPerson.id ? response.data : p))
+          setNewName('')
+          setNewNumber('')
+        })
+        .catch(error => {
+          console.error('Error updating person:', error)
+          alert('Failed to update person')
+        })
+      }
+      return
+    }
+    
     axios.post('http://localhost:3001/persons', {
-    name: newName,
-    number: newNumber,  
-  })
+      name: newName,
+      number: newNumber,
+    })
+    .then(response => {
+      setPersons(prev => [...prev, response.data])
+      setNewName('')
+      setNewNumber('')
+    })
+    .catch(error => {
+      console.error('Error adding person:', error)
+      alert('Failed to add person')
+    })
   }
 
 
@@ -40,21 +70,6 @@ const App = () => {
         setPersons(response.data)
       })
   }, [])
-
-  const addPerson = (event) => {
-    event.preventDefault()
-    
-    const personObject = {
-      name: newName,
-      number: newNumber,
-
-      id: persons.length + 1, 
-    }
-    
-    setPersons([...persons, personObject])
-    setNewName('')
-    setNewNumber('')
-  }
 
   const isNameInList = persons.some(person => person.name === newName)
 
@@ -84,7 +99,7 @@ const App = () => {
       <h2>Numbers</h2>
       
 
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} deletePerson={deletePerson} />
     </div>
   )
 }

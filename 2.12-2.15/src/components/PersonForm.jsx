@@ -1,14 +1,11 @@
-
 const PersonForm = ({ 
   addPerson, 
   newName, 
   setNewName, 
   newNumber, 
-  setNewNumber, 
-  isNameInList 
+  setNewNumber,
+  isNameInList
 }) => {
-
-  
   return (
     <form onSubmit={addPerson}>
       <div>
@@ -24,9 +21,8 @@ const PersonForm = ({
         />
       </div>
       <div>
-        <button type="submit" disabled={isNameInList}>add</button>
+        <button type="submit">add</button>
       </div>
-      {isNameInList && <p style={{color: 'red'}}>{newName} is already added to phonebook</p>}
     </form>
   )
 }
