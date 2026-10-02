@@ -1,116 +1,46 @@
 import { useState, useEffect } from 'react'
-import Filter from './components/Filter'
-import PersonForm from './components/PersonForm'
-import Persons from './components/Persons'
-import Message from './components/Message'
 import axios from 'axios'
+import PrintCountry from './components/printCountry'
 
-import './index.css'
 
 const App = () => {
-  const [persons, setPersons] = useState([]) 
-  const [newName, setNewName] = useState('')
-  const [newNumber, setNewNumber] = useState('')
-  const [printName, searchName] = useState('')
-  const [message, setMessage] = useState(null);
-
-  const deletePerson = (id) => {
-    const person = persons.find(p => p.id === id)
-    if (window.confirm(`Delete ${person.name}?`)) {
-      axios.delete(`http://localhost:3001/persons/${id}`)
-        .then(() => {
-          setPersons(prev => prev.filter(p => p.id !== id))
-        })
-        .catch(error => {
-          console.error('Error deleting person:', error)
-          alert('Failed to delete person')
-        })
-    }
-  }
-
-
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    
-    if (isNameInList) {
-      const existingPerson = persons.find(p => p.name === newName)
-      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-        axios.put(`http://localhost:3001/persons/${existingPerson.id}`, {
-          name: newName,
-          number: newNumber,
-        })
-        .then(response => {
-          setPersons(prev => prev.map(p => p.id === existingPerson.id ? response.data : p))
-          setNewName('')
-          setNewNumber('')
-          setMessage(`Updated ${newName}`)
-          setTimeout(() => setMessage(null), 5000)
-        })
-        .catch(error => {
-          console.error('Error updating person:', error)
-          setMessage(`Failed to update ${newName}`)
-          setTimeout(() => setMessage(null), 5000)
-        })
-      }
-      return
-    }
-    
-    axios.post('http://localhost:3001/persons', {
-      name: newName,
-      number: newNumber,
-    })
-    .then(response => {
-      setPersons(prev => [...prev, response.data])
-      setNewName('')
-      setNewNumber('')
-      setMessage(`Added ${newName}`)
-      setTimeout(() => setMessage(null), 5000)
-    })
-    .catch(error => {
-      console.error('Error adding person:', error)
-      alert('Failed to add person')
-    })
-  }
-
+  const [countries, setCountries] = useState([])
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons')
+    axios
+      .get('https://studies.cs.helsinki.fi/restcountries/api/all')
       .then(response => {
-        setPersons(response.data)
+        setCountries(response.data)
       })
   }, [])
 
-  const isNameInList = persons.some(person => person.name === newName)
-
-  const personsToShow = printName === ''
-    ? persons
-    : persons.filter(person => 
-        person.name.toLowerCase().includes(printName.toLowerCase())
-      )
+  const filtered = countries.filter(c =>
+    c.name.common.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      
-      <Filter printName={printName} searchName={searchName} />
-     
-      <h2>Add a new</h2>
-
-      <Message message={message} />
-
-      <PersonForm   
-        addPerson={handleSubmit}
-        newName={newName}
-        setNewName={setNewName}
-        newNumber={newNumber}
-        setNewNumber={setNewNumber}
-        isNameInList={isNameInList}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search country"
       />
+      {search && filtered.length > 10 && (
+        <div>Too many matches, specify another filter</div>
+      )}
+      {search && filtered.length === 1 && (
+        <PrintCountry countryInfo={filtered[0]} />
+      )}
+      {search && filtered.length > 1 && filtered.length <= 10 && (
+        <ul>
+          {filtered.map(c => (
+            <li key={c.cca3}>{c.name.common} <button onClick={() => setSearch(c.name.common)}>Show</button></li> 
+          ))}
+        </ul>
 
-      <h2>Numbers</h2>
-      
-
-      <Persons personsToShow={personsToShow} deletePerson={deletePerson} />
+      )}
     </div>
   )
 }
