@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Message from './components/Message'
 import axios from 'axios'
+
+import './index.css'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [printName, searchName] = useState('')
+  const [message, setMessage] = useState(null);
 
   const deletePerson = (id) => {
     const person = persons.find(p => p.id === id)
@@ -39,10 +43,13 @@ const App = () => {
           setPersons(prev => prev.map(p => p.id === existingPerson.id ? response.data : p))
           setNewName('')
           setNewNumber('')
+          setMessage(`Updated ${newName}`)
+          setTimeout(() => setMessage(null), 5000)
         })
         .catch(error => {
           console.error('Error updating person:', error)
-          alert('Failed to update person')
+          setMessage(`Failed to update ${newName}`)
+          setTimeout(() => setMessage(null), 5000)
         })
       }
       return
@@ -56,6 +63,8 @@ const App = () => {
       setPersons(prev => [...prev, response.data])
       setNewName('')
       setNewNumber('')
+      setMessage(`Added ${newName}`)
+      setTimeout(() => setMessage(null), 5000)
     })
     .catch(error => {
       console.error('Error adding person:', error)
@@ -86,8 +95,10 @@ const App = () => {
       <Filter printName={printName} searchName={searchName} />
      
       <h2>Add a new</h2>
-      
-      <PersonForm 
+
+      <Message message={message} />
+
+      <PersonForm   
         addPerson={handleSubmit}
         newName={newName}
         setNewName={setNewName}
