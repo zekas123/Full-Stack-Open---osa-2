@@ -27,27 +27,6 @@ const App = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    
-    if (isNameInList) {
-      const existingPerson = persons.find(p => p.name === newName)
-      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-        axios.put(`http://localhost:3001/persons/${existingPerson.id}`, {
-          name: newName,
-          number: newNumber,
-        })
-        .then(response => {
-          setPersons(prev => prev.map(p => p.id === existingPerson.id ? response.data : p))
-          setNewName('')
-          setNewNumber('')
-        })
-        .catch(error => {
-          console.error('Error updating person:', error)
-          alert('Failed to update person')
-        })
-      }
-      return
-    }
-    
     axios.post('http://localhost:3001/persons', {
       name: newName,
       number: newNumber,
@@ -71,7 +50,7 @@ const App = () => {
       })
   }, [])
 
-  const isNameInList = persons.some(person => person.name === newName)
+  const isNameInList = persons.some(person => person.name === newName  )
 
   const personsToShow = printName === ''
     ? persons
@@ -94,6 +73,7 @@ const App = () => {
         newNumber={newNumber}
         setNewNumber={setNewNumber}
         isNameInList={isNameInList}
+        deletePerson={deletePerson}
       />
 
       <h2>Numbers</h2>
